@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>NeoPat Bulk Student Finder | Fast Neo ID Lookup & Export</title>
+  <meta name="description" content="Search bulk NeoPat IDs instantly to retrieve complete student records: CGPA, Registration Number, Full Name, Campus, Venue, Resume Link, and contact details. Works 100% offline on mobile and desktop.">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎓</text></svg>">
+</head>
+<body class="light-theme">
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-inner container">
+      <div class="header-branding">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="logo-title">NeoPat Student Finder</h1>
+          <p class="logo-subtitle">Bulk Neo ID Lookup &bull; Complete Student Records</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <span class="database-badge" id="db-stat-pill" title="Preloaded Database Size">
+          <span class="live-dot"></span>
+          <span id="db-record-count">4,351 Records Loaded</span>
+        </span>
+        <button id="btn-open-upload-modal" class="btn btn-secondary btn-sm" title="Upload new Excel or CSV file">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span class="btn-text">Import Excel</span>
+        </button>
+        <button id="btn-theme-toggle" class="btn-icon" title="Toggle Dark/Light Mode" aria-label="Toggle Dark Mode">
+          <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content container">
+
+    <!-- Input Card Section -->
+    <section class="card input-card">
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="step-badge">1</span>
+          <div>
+            <h2 class="card-title">Paste Neo IDs in Bulk</h2>
+            <p class="card-description">Paste 1 to 1,000+ Neo IDs separated by newlines, commas, spaces, or tabs. Exact order is preserved!</p>
+          </div>
+        </div>
+        <div class="input-actions-chips">
+          <button type="button" id="btn-paste-clipboard" class="chip-btn" title="Paste directly from clipboard">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+            </svg>
+            Paste Clipboard
+          </button>
+          <button type="button" id="btn-sample-10" class="chip-btn" title="Load 10 sample IDs">
+            Sample 10 IDs
+          </button>
+          <button type="button" id="btn-sample-50" class="chip-btn" title="Load 50 sample IDs with Venues">
+            Sample 50 IDs
+          </button>
+          <button type="button" id="btn-clear-input" class="chip-btn chip-btn-danger" title="Clear input text">
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div class="textarea-wrapper">
+        <textarea 
+          id="bulk-neoid-input" 
+          placeholder="Paste Neo IDs here...&#10;&#10;Examples:&#10;V4I0G1R4&#10;W4C8Z9S1&#10;Y7L0H1J0&#10;Q5C0E3S7&#10;A3B2Q8T4&#10;&#10;(Supports up to 1000+ IDs from Excel columns or text files)"
+          rows="6"
+          spellcheck="false"
+        ></textarea>
+        <div class="textarea-meta">
+          <span id="detected-count-badge" class="badge-neutral">0 Neo IDs detected</span>
+          <span class="hint-text">Tip: Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to search</span>
+        </div>
+      </div>
+
+      <!-- Controls Row -->
+      <div class="input-controls-row">
+        <div class="checkbox-group">
+          <label class="custom-checkbox">
+            <input type="checkbox" id="chk-preserve-order" checked>
+            <span class="checkbox-box"></span>
+            <span class="checkbox-label">Keep exact input order</span>
+          </label>
+          <label class="custom-checkbox">
+            <input type="checkbox" id="chk-deduplicate">
+            <span class="checkbox-box"></span>
+            <span class="checkbox-label">Remove duplicate inputs</span>
+          </label>
+        </div>
+
+        <div class="submit-action-group">
+          <button type="button" id="btn-fetch-details" class="btn btn-primary btn-lg">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <span>Fetch Details Now</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results Section (Initially empty until search) -->
+    <section id="results-section" class="results-section hidden">
+      
+      <!-- KPI Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon bg-indigo-subtle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div>
+            <div class="stat-value" id="stat-total-input">0</div>
+            <div class="stat-label">Total IDs Queried</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon bg-emerald-subtle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div>
+            <div class="stat-value text-emerald" id="stat-found-count">0</div>
+            <div class="stat-label">Found Students (<span id="stat-found-pct">100%</span>)</div>
+          </div>
+        </div>
+
+        <div class="stat-card" id="card-not-found">
+          <div class="stat-icon bg-amber-subtle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div>
+            <div class="stat-value text-amber" id="stat-notfound-count">0</div>
+            <div class="stat-label">Not Found IDs</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon bg-blue-subtle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <div>
+            <div class="stat-value" id="stat-avg-cgpa">-</div>
+            <div class="stat-label">Average CGPA</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Missing IDs Alert Box (if any) -->
+      <div id="not-found-alert" class="alert-box alert-amber hidden">
+        <div class="alert-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="alert-content">
+          <div class="alert-header">
+            <strong><span id="not-found-qty">0</span> Neo ID(s) Were Not Found</strong>
+            <button id="btn-copy-not-found" class="btn btn-xs btn-amber">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              Copy Not Found List
+            </button>
+          </div>
+          <div class="not-found-tags" id="not-found-tags-container"></div>
+        </div>
+      </div>
+
+      <!-- Results Header Toolbar -->
+      <div class="card results-toolbar-card">
+        <div class="toolbar-row">
+          <!-- Filter search box -->
+          <div class="filter-search-wrap">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="filter-search-input" placeholder="Quick filter by Name, Reg No, Campus...">
+            <button type="button" id="btn-clear-filter" class="btn-clear-search hidden" title="Clear filter">&times;</button>
+          </div>
+
+          <!-- Quick Dropdowns -->
+          <div class="dropdowns-group">
+            <select id="select-campus-filter" class="select-sm" title="Filter by Campus">
+              <option value="ALL">All Campuses</option>
+              <option value="Amaravati">Amaravati</option>
+              <option value="Bhopal">Bhopal</option>
+              <option value="Chennai">Chennai</option>
+              <option value="Vellore">Vellore</option>
+            </select>
+
+            <select id="select-sort-by" class="select-sm" title="Sort Results">
+              <option value="INPUT_ORDER">Sort: Input Order (Original)</option>
+              <option value="CGPA_DESC">Sort: CGPA (High &rarr; Low)</option>
+              <option value="CGPA_ASC">Sort: CGPA (Low &rarr; High)</option>
+              <option value="NAME_ASC">Sort: Name (A &rarr; Z)</option>
+              <option value="REGNO_ASC">Sort: Reg No (A &rarr; Z)</option>
+            </select>
+          </div>
+
+          <!-- View Toggle & Export Actions -->
+          <div class="action-buttons-group">
+            <div class="view-toggle" role="group" aria-label="View Toggle">
+              <button id="view-mode-table" class="btn-toggle active" title="Table View (Desktop)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 3h18v18H3z"/><path d="M21 9H3"/><path d="M21 15H3"/><path d="M12 3v18"/>
+                </svg>
+                <span class="toggle-text">Table</span>
+              </button>
+              <button id="view-mode-cards" class="btn-toggle" title="Card View (Mobile)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                <span class="toggle-text">Cards</span>
+              </button>
+            </div>
+
+            <!-- Export Buttons -->
+            <button id="btn-export-excel" class="btn btn-secondary btn-sm" title="Download Excel (.xlsx) file">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="8" y1="13" x2="16" y2="13"/>
+                <line x1="8" y1="17" x2="16" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+              <span>Excel</span>
+            </button>
+
+            <button id="btn-export-csv" class="btn btn-secondary btn-sm" title="Download CSV file">
+              <span>CSV</span>
+            </button>
+
+            <button id="btn-copy-table" class="btn btn-secondary btn-sm" title="Copy table to paste in Excel/Sheets">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span>Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="active-filter-indicator">
+          <span>Showing <strong id="visible-count">0</strong> of <strong id="total-found-count">0</strong> matched students</span>
+          <button id="btn-reset-filters" class="link-btn hidden">Reset all filters</button>
+        </div>
+      </div>
+
+      <!-- Table View -->
+      <div id="table-view-container" class="card table-card">
+        <div class="table-responsive">
+          <table class="students-table" id="students-table">
+            <thead>
+              <tr>
+                <th class="col-num">#</th>
+                <th class="col-neoid">Neo ID</th>
+                <th class="col-name">Student Name</th>
+                <th class="col-regno">Reg No</th>
+                <th class="col-cgpa">CGPA</th>
+
+                <th class="col-campus">Campus</th>
+                <th class="col-degree">Degree & Branch</th>
+                <th class="col-mobile">Mobile</th>
+                <th class="col-email">Email</th>
+                <th class="col-marks">10th / 12th</th>
+                <th class="col-resume">Resume</th>
+                <th class="col-actions">Action</th>
+              </tr>
+            </thead>
+            <tbody id="students-table-body">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Card View (Mobile-Friendly) -->
+      <div id="cards-view-container" class="cards-grid hidden">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Empty State for filtered results -->
+      <div id="no-filtered-results" class="empty-state card hidden">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <h3>No students match your filter criteria</h3>
+        <p>Try clearing your search query or changing campus/venue filters.</p>
+        <button class="btn btn-secondary btn-sm" onclick="App.resetFilters()">Clear Filters</button>
+      </div>
+
+    </section>
+
+    <!-- Empty State Before Search -->
+    <div id="initial-empty-state" class="empty-state card">
+      <div class="empty-illustration">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <circle cx="11" cy="14" r="3"/>
+          <path d="m13.5 16.5 3 3"/>
+        </svg>
+      </div>
+      <h3>Ready to Lookup Student Details</h3>
+      <p>Paste any number of Neo IDs in the box above (even 1,000+ at once!) and click <strong>"Fetch Details Now"</strong>.</p>
+      <div class="quick-try-buttons">
+        <button class="btn btn-secondary btn-sm" onclick="App.loadSample(10)">
+          Try 10 Sample IDs
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="App.loadSample(50)">
+          Try 50 Sample IDs
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Student Detail Inspection Modal -->
+  <div id="student-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-student-name">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <span class="badge-neutral" id="modal-neoid">Neo ID</span>
+          <h3 id="modal-student-name" class="modal-title">Student Details</h3>
+        </div>
+        <button id="btn-close-modal" class="modal-close" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-student-body">
+        <!-- Rendered via JS -->
+      </div>
+      <div class="modal-footer" id="modal-student-footer">
+        <!-- Action buttons like Open Resume, Call, WhatsApp, Copy -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Excel / CSV Upload Modal -->
+  <div id="upload-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-upload-title">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div>
+          <h3 id="modal-upload-title" class="modal-title">Import & Update Database</h3>
+          <p class="modal-subtitle">Upload updated Excel (.xlsx) or CSV files anytime to expand the database</p>
+        </div>
+        <button id="btn-close-upload-modal" class="modal-close" aria-label="Close dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="upload-dropzone" id="upload-dropzone">
+          <input type="file" id="file-input-excel" accept=".xlsx,.xls,.csv" class="file-input-hidden">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p class="dropzone-prompt"><strong>Click to browse</strong> or drag & drop an Excel (.xlsx) or CSV file</p>
+          <span class="dropzone-hint">Supports Master sheets (with marks/CGPA) or Venue sheets</span>
+        </div>
+
+        <div id="upload-status" class="upload-status hidden"></div>
+
+        <div class="upload-instructions">
+          <h4>How it works:</h4>
+          <ul>
+            <li>Files are parsed <strong>100% locally in your browser</strong> &mdash; zero data is sent to any external server.</li>
+            <li>If a Master Sheet is uploaded, it updates names, CGPA, reg numbers, and resume links.</li>
+            <li>If a Venue Sheet is uploaded, it matches Neo IDs and updates room/venue assignments.</li>
+            <li>Custom uploads are automatically saved in your browser's <code>localStorage</code> for your next visit!</li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btn-reset-default-db" class="btn btn-secondary">
+          Reset to Factory Default (4,351 Records)
+        </button>
+        <button type="button" class="btn btn-primary" onclick="App.closeUploadModal()">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-inner">
+      <p>&copy; NeoPat Student Finder &bull; Optimized for Mobile & Laptop &bull; Offline Ready</p>
+      <p class="footer-sub">Private & secure: All lookups and exports run locally inside your browser.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <!-- SheetJS for local Excel parsing and generation (with CDN fallback) -->
+  <script src="xlsx.full.min.js"></script>
+  <script>
+    if (!window.XLSX) {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');
+    }
+  </script>
+  <!-- Pre-bundled Database of 4,351 Students & Venues -->
+  <script src="data.js"></script>
+  <!-- Main Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
